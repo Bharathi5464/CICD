@@ -1,32 +1,46 @@
+# Name of the workflow (shown in GitHub Actions UI)
 name: CI Pipeline
 
+# Trigger: Run this pipeline whenever code is pushed to 'main' branch
 on:
   push:
     branches: [ main ]
 
+# Define jobs
 jobs:
   build:
-
+    # Runner: GitHub will provide a fresh Ubuntu virtual machine
     runs-on: ubuntu-latest
 
     steps:
-
+    # Step 1: Checkout the repository code into the runner
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    # Step 2: Install Python 3.11 on the runner
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
 
+    # Step 3: Set PYTHONPATH environment variable
+    # This helps Python locate your project modules during execution
+    - name: Set PYTHONPATH
+      run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
+
+    # Step 4: Install project dependencies from requirements.txt
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
 
+    # Step 5: Run automated tests using pytest
+    # If any test fails, the pipeline will stop here
     - name: Run tests
       run: |
         pytest
 
+    # Step 6: Build Docker image from Dockerfile
+    # This packages your application into a container
     - name: Build Docker image
       run: |
         docker build -t devops-cicd-app:1.0 .
