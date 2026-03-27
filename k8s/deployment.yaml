@@ -1,0 +1,36 @@
+# API version of Kubernetes object
+apiVersion: apps/v1
+
+# Type of resource we are creating
+kind: Deployment
+
+metadata:
+  # Name of the deployment (used to identify it)
+  name: devops-cicd-app
+
+spec:
+  # Number of pod replicas (instances of your app)
+  replicas: 2
+
+  # Selector tells Kubernetes how to find the pods
+  selector:
+    matchLabels:
+      app: devops-cicd-app
+
+  # Template defines the actual pod configuration
+  template:
+    metadata:
+      # Labels attached to pods (must match selector above)
+      labels:
+        app: devops-cicd-app
+
+    spec:
+      containers:
+      - name: devops-cicd-container  # Name of container inside pod
+
+        # Docker image to run (from Docker Hub or registry)
+        #image: yourusername/devops-cicd-app:1.0 - yourusername=dockerhub acount name
+        image: bharathicicd/devops-cicd-app:1.0
+
+        ports:
+        - containerPort: 5000  # Port your app runs inside container

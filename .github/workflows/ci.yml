@@ -46,3 +46,19 @@ jobs:
     - name: Push Docker image
       run: docker push ${{ secrets.DOCKER_USERNAME }}/devops-cicd-app:1.0
       # Upload the built image to Docker Hub
+
+    - name: Set up Kubeconfig
+      run: |
+           mkdir -p ~/.kube
+           echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
+          # Create kube directory (kubectl expects this)
+          # Write kubeconfig from GitHub Secrets
+
+    - name: Deploy to Kubernetes
+      run: |
+       kubectl set image deployment/devops-cicd-app \
+       devops-cicd-container=${{ secrets.DOCKER_USERNAME }}/devops-cicd-app:1.0
+      # Update container image inside the existing Deployment 
+      # deployment/devops-cicd-app - Name of Kubernetes Deployment (your running app)]
+      # devops-cicd-container - Container name inside that Deployment 
+      # ${{ secrets.DOCKER_USERNAME }}/devops-cicd-app:1.0 - New Docker image from Docker Hub 
