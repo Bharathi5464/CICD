@@ -1,37 +1,48 @@
-name: CI Pipeline
+name: CI Pipeline  # Name of the workflow (shown in GitHub Actions)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]  # Run this pipeline whenever code is pushed to main branch
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build:  # Job name
+
+    runs-on: ubuntu-latest  # GitHub provides a Linux machine to run this job
 
     steps:
-      - uses: actions/checkout@v3
+
+      - uses: actions/checkout@v3  
+        # Download your GitHub repo code into the CI machine
 
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
+        # Install Python 3.11 in the CI environment
 
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
+        # Add project root folder to PYTHONPATH
+        # So Python can find your app modules during testing
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+        # Install required Python libraries from requirements.txt
 
       - name: Run tests
         run: pytest
+        # Run test cases to verify your code is working
 
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        # Login to Docker Hub using secrets
 
       - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/devops-cicd-app:1.0 .
+        # Build Docker image
 
       - name: Push Docker image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/devops-cicd-app:1.0
+        # Push image to Docker Hub
 
       - name: Install kubectl
         run: |
@@ -43,8 +54,14 @@ jobs:
         run: |
           mkdir -p ~/.kube
           echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
+          # Create kube directory (kubectl expects this)
+          # Write kubeconfig from GitHub Secrets
 
       - name: Deploy to Kubernetes
         run: |
           kubectl set image deployment/devops-cicd-app \
           devops-cicd-container=${{ secrets.DOCKER_USERNAME }}/devops-cicd-app:1.0
+        # Update container image inside the existing Deployment
+        # deployment/devops-cicd-app - Name of Kubernetes Deployment
+        # devops-cicd-container - Container name inside that Deployment
+        # New Docker image from Docker Hub
