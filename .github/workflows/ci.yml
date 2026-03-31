@@ -44,24 +44,18 @@ jobs:
         run: docker push ${{ secrets.DOCKER_USERNAME }}/devops-cicd-app:1.0
         # Push image to Docker Hub
 
-      - name: Install kubectl
-        run: |
-          curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
-
-      - name: Set up Kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
-          # Create kube directory (kubectl expects this)
-          # Write kubeconfig from GitHub Secrets
+      - name: Create Kubernetes cluster (kind)
+        uses: helm/kind-action@v1
+        # Create temporary Kubernetes cluster inside GitHub Actions
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl set image deployment/devops-cicd-app \
-          devops-cicd-container=${{ secrets.DOCKER_USERNAME }}/devops-cicd-app:1.0
-        # Update container image inside the existing Deployment
-        # deployment/devops-cicd-app - Name of Kubernetes Deployment
-        # devops-cicd-container - Container name inside that Deployment
-        # New Docker image from Docker Hub
+          kubectl create deployment devops-cicd-app \
+          --image=${{ secrets.DOCKER_USERNAME }}/devops-cicd-app:1.0
+        # Create deployment using Docker image
+
+      - name: Verify Deployment
+        run: |
+          kubectl get pods
+          kubectl get deployments
+        # Verify pods and deployment are running
